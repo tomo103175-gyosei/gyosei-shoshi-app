@@ -1,0 +1,113 @@
+.container {
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.header {
+    width: 100%;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    padding-top: 10px;
+}
+
+.backLink {
+    margin-right: 16px;
+    font-size: 1.5rem;
+    color: var(--color-text-sub);
+    display: flex;
+    align-items: center;
+    transition: transform var(--transition-fast);
+    padding: 8px;
+    border-radius: 50%;
+}
+
+.backLink:hover {
+    transform: translateX(-4px);
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--color-primary);
+}
+
+.title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    width: 100%;
+}
+
+.categoryCard {
+    background: white;
+    border-radius: var(--radius-md);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    transition: all var(--transition-fast);
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    overflow: hidden;
+}
+
+.categoryCard::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--color-border);
+    transition: background var(--transition-fast);
+}
+
+.categoryCard:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary-light);
+}
+
+.categoryCard:hover::before {
+    background: var(--color-accent);
+}
+
+.icon {
+    font-size: 2rem;
+    margin-right: 20px;
+    width: 56px;
+    height: 56px;
+    background: var(--color-background);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.info {
+    flex: 1;
+}
+
+.name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: var(--color-text-main);
+}
+
+.desc {
+    font-size: 0.85rem;
+    color: var(--color-text-sub);
+}

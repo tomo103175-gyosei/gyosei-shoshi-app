@@ -1,0 +1,132 @@
+.container {
+    padding: 20px;
+    min-height: 100vh;
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.header {
+    width: 100%;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+}
+
+.backLink {
+    margin-right: 16px;
+    font-size: 1.5rem;
+    color: var(--color-text-sub);
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background var(--transition-fast);
+}
+
+.backLink:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--color-primary);
+}
+
+.title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.uploadCard {
+    background: white;
+    border-radius: var(--radius-md);
+    padding: 40px;
+    box-shadow: var(--shadow-md);
+    width: 100%;
+    text-align: center;
+    border: 2px dashed var(--color-border);
+    transition: all var(--transition-fast);
+    cursor: pointer;
+    margin-bottom: 24px;
+}
+
+.uploadCardActive {
+    border-color: var(--color-primary);
+    background: #F0F7FF;
+    transform: scale(1.01);
+}
+
+.icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    color: var(--color-primary-light);
+}
+
+.uploadText {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--color-text-main);
+}
+
+.uploadSubText {
+    font-size: 0.9rem;
+    color: var(--color-text-sub);
+    margin-bottom: 24px;
+}
+
+.fileInput {
+    display: none;
+}
+
+.selectButton {
+    display: inline-block;
+    padding: 10px 24px;
+    background: var(--color-primary);
+    color: white;
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    pointer-events: none;
+    /* 親のクリックで発火するため */
+}
+
+.fileName {
+    margin-top: 16px;
+    font-weight: 600;
+    color: var(--color-primary-dark);
+}
+
+.loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(15, 76, 129, 0.1);
+    border-left-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+.errorContainer {
+    width: 100%;
+    text-align: center;
+    background: #FFF5F5;
+    border: 1px solid #FAB1B1;
+    padding: 20px;
+    border-radius: var(--radius-md);
+    margin-bottom: 24px;
+    color: var(--color-error);
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

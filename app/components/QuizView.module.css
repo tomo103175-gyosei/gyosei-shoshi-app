@@ -1,0 +1,170 @@
+.container {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.headerBadge {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 12px;
+}
+
+.categoryBadge {
+    background: var(--color-primary-light);
+    color: white;
+    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.questionCard {
+    background: white;
+    border-radius: var(--radius-md);
+    padding: 24px;
+    box-shadow: var(--shadow-card);
+    width: 100%;
+    margin-bottom: 24px;
+    animation: slideUp 0.5s ease-out;
+}
+
+.questionText {
+    font-size: 1.15rem;
+    font-weight: 600;
+    line-height: 1.7;
+    color: var(--color-text-main);
+}
+
+.optionsGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 30px;
+}
+
+.optionButton {
+    padding: 16px 20px;
+    text-align: left;
+    background: white;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-main);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    position: relative;
+    overflow: hidden;
+}
+
+.optionButton:hover:not(:disabled) {
+    border-color: var(--color-primary-light);
+    background: #F8FBFE;
+}
+
+.optionButton:disabled {
+    cursor: default;
+}
+
+/* 回答後の状態 */
+.optionCorrect {
+    border-color: var(--color-success);
+    background: #F0FFF4;
+    color: #155724;
+}
+
+.optionIncorrect {
+    border-color: var(--color-error);
+    background: #FFF5F5;
+    color: #721C24;
+}
+
+.optionDimmed {
+    opacity: 0.6;
+    border-color: #EEE;
+}
+
+.resultSection {
+    width: 100%;
+    animation: fadeIn 0.5s ease-out;
+    padding-bottom: 40px;
+}
+
+.explanationCard {
+    background: linear-gradient(to bottom, #FAFBFC, #FFF);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-sm);
+}
+
+.resultHeader {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.correctLabel {
+    color: var(--color-success);
+}
+
+.incorrectLabel {
+    color: var(--color-error);
+}
+
+.explanationText {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--color-text-main);
+    margin-bottom: 20px;
+    white-space: pre-wrap;
+}
+
+.referenceBox {
+    background: #F4F7FA;
+    padding: 16px;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    border-left: 4px solid var(--color-accent);
+}
+
+.referenceTitle {
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: var(--color-primary-dark);
+}
+
+.nextButton {
+    width: 100%;
+    padding: 16px;
+    font-size: 1.1rem;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
