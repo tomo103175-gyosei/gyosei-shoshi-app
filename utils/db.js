@@ -107,3 +107,11 @@ export async function getStats() {
 
     return { active, completed, review };
 }
+
+export async function deleteQuestion(id) {
+    const db = await initDB();
+    const tx = db.transaction('questions', 'readwrite');
+    const store = tx.objectStore('questions');
+    await store.delete(id);
+    await tx.done;
+}

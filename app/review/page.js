@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getReviewQuestions, updateQuestionStatus } from '../../utils/db';
+import { getReviewQuestions, updateQuestionStatus, deleteQuestion } from '../../utils/db';
 import ReviewQuizView from '../components/ReviewQuizView';
 import styles from '../upload/page.module.css'; // スタイル流用
 
@@ -36,6 +36,23 @@ export default function ReviewPage() {
             setCurrentIndex(prev => prev + 1);
         } else {
             setFinished(true);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!confirm('本当にこの問題を削除しますか？')) return;
+
+        const currentQ = questions[currentIndex];
+        await deleteQuestion(currentQ.id);
+
+        const newQuestions = questions.filter(q => q.id !== currentQ.id);
+        setQuestions(newQuestions);
+
+        if (newQuestions.length === 0) {
+            setFinished(true); // 問題がなくなったので終了扱い
+        } else if (currentIndex >= newQuestions.length) {
+            // 最後の問題を削除した場合、インデックスを戻す
+            setCurrentIndex(newQuestions.length - 1);
         }
     };
 
@@ -94,6 +111,7 @@ export default function ReviewPage() {
             <ReviewQuizView
                 question={questions[currentIndex]}
                 onAnswer={handleAnswer}
+                onDelete={handleDelete}
             />
         </div>
     );

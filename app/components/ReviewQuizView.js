@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import styles from './QuizView.module.css'; // 既存のスタイルを流用
 
-export default function ReviewQuizView({ question, onAnswer }) {
+export default function ReviewQuizView({ question, onAnswer, onDelete }) {
     const [selected, setSelected] = useState(null);
     const [showResult, setShowResult] = useState(false);
 
@@ -83,16 +83,22 @@ export default function ReviewQuizView({ question, onAnswer }) {
 
     return (
         <div className={styles.container}>
-            <div className={styles.headerBadge}>
+            <div className={styles.headerBadge} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span className={styles.categoryBadge}>復習問題 (v2)</span>
+                {onDelete && (
+                    <button
+                        onClick={onDelete}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', padding: '0 5px' }}
+                        aria-label="この問題を削除"
+                    >
+                        🗑️
+                    </button>
+                )}
             </div>
 
             <div className={styles.questionCard}>
                 <h2 className={styles.questionText} style={{ whiteSpace: 'pre-wrap' }}>{question.text}</h2>
-                <div style={{ fontSize: '0.7rem', color: '#ccc', textAlign: 'right', marginTop: '10px' }}>
-                    Type: {['1', '2', '3', '4', '5'].includes(String(question.correctAnswer)) ? '5-Choice' : 'O/X'} /
-                    Raw Answer: {String(question.correctAnswer)}
-                </div>
+
             </div>
 
             {renderOptions()}
