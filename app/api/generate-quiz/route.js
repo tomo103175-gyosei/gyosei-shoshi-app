@@ -15,7 +15,7 @@ export async function POST(request) {
 
         const genAI = new GoogleGenerativeAI(apiKey);
         // Use gemini-2.5-flash for speed, or pro for quality. flash implies speed which is good for interactive quiz.
-        const model = genAI.getGenerativeModel({ model: "gemini-3-pro-preview" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
         const categoryMap = {
             constitution: "憲法",

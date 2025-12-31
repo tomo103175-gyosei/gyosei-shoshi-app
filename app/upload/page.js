@@ -3,15 +3,14 @@
 import { useState, useRef } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
-import QuizView from '../components/QuizView';
+import { parseSpreadsheet, normalizeCorrectAnswer } from '../../utils/parsers';
+import { addQuestions } from '../../utils/db';
 
 export default function UploadPage() {
     const [dragActive, setDragActive] = useState(false);
-    const [file, setFile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [quizData, setQuizData] = useState(null);
-    const [quizKey, setQuizKey] = useState(0);
+    const [successMessage, setSuccessMessage] = useState(null);
 
     const inputRef = useRef(null);
 
@@ -25,75 +24,96 @@ export default function UploadPage() {
         }
     };
 
-    const handleDrop = (e) => {
+    const handleDrop = async (e) => {
         e.preventDefault();
         e.stopPropagation();
         setDragActive(false);
 
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            handleFile(e.dataTransfer.files[0]);
+            await handleFile(e.dataTransfer.files[0]);
         }
     };
 
-    const handleChange = (e) => {
+    const handleChange = async (e) => {
         e.preventDefault();
         if (e.target.files && e.target.files[0]) {
-            handleFile(e.target.files[0]);
+            await handleFile(e.target.files[0]);
         }
     };
 
-    const handleFile = (file) => {
-        if (file.type !== "application/pdf") {
-            setError("PDFファイルのみアップロード可能です");
-            return;
-        }
-        setFile(file);
+    const handleFile = async (file) => {
+        setLoading(true);
         setError(null);
-        processFile(file);
+        setSuccessMessage(null);
+
+        try {
+            let questions = [];
+
+            if (file.name.endsWith('.csv') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                // スプレッドシート処理
+                questions = await parseSpreadsheet(file);
+                if (questions.length === 0) {
+                    throw new Error("有効な問題データが見つかりませんでした。フォーマットを確認してください。");
+                }
+            } else if (file.type === "application/pdf") {
+                // PDF処理 (サーバーサイド)
+                const formData = new FormData();
+                formData.append("file", file);
+                const res = await fetch('/api/process-pdf', { method: 'POST', body: formData });
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.error || '解析エラー');
+                }
+                const data = await res.json();
+
+                // プロンプト修正により O/X 形式で返ってくる
+                if (data.text) {
+                    questions.push({
+                        text: data.text,
+                        correctAnswer: normalizeCorrectAnswer(data.correctAnswer),
+                        explanation: `${data.explanation}\n(参照: ${data.reference || ''})`,
+                        source: file.name
+                    });
+                }
+            } else if (file.type.startsWith("image/")) {
+                // 画像処理
+                const formData = new FormData();
+                formData.append("file", file);
+                const res = await fetch('/api/process-image', { method: 'POST', body: formData });
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.error || '解析エラー');
+                }
+                const data = await res.json();
+                // APIは配列で返すと想定
+                questions = data.map(q => ({
+                    text: q.text,
+                    correctAnswer: normalizeCorrectAnswer(q.correctAnswer),
+                    explanation: q.explanation,
+                    source: file.name
+                }));
+            } else {
+                throw new Error("サポートされていないファイル形式です (PDF, Excel, CSV, 画像)");
+            }
+
+            if (questions.length > 0) {
+                await addQuestions(questions);
+                setSuccessMessage(`${questions.length}問の問題を取り込みました！`);
+            } else {
+                throw new Error("問題を作成できませんでした");
+            }
+
+        } catch (err) {
+            console.error(err);
+            setError(err.message || "エラーが発生しました");
+        } finally {
+            setLoading(false);
+            if (inputRef.current) inputRef.current.value = ""; // リセット
+        }
     };
 
     const onButtonClick = () => {
         inputRef.current.click();
-    };
-
-    const processFile = async (uploadedFile) => {
-        setLoading(true);
-        setError(null);
-        setQuizData(null);
-        setQuizKey(prev => prev + 1);
-
-        const formData = new FormData();
-        formData.append("file", uploadedFile);
-
-        try {
-            const response = await fetch('/api/process-pdf', {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (!response.ok) {
-                const errData = await response.json();
-                throw new Error(errData.error || '解析に失敗しました');
-            }
-
-            const data = await response.json();
-            if (data.error) {
-                throw new Error(data.error);
-            }
-
-            setQuizData(data);
-        } catch (err) {
-            setError(err.message);
-            setFile(null); // エラー時はリセット
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleRetry = () => {
-        setFile(null);
-        setQuizData(null);
-        setError(null);
     };
 
     return (
@@ -102,10 +122,10 @@ export default function UploadPage() {
                 <Link href="/" className={styles.backLink} aria-label="戻る">
                     ←
                 </Link>
-                <h1 className={styles.title}>過去問アップロード</h1>
+                <h1 className={styles.title}>過去問・資料アップロード</h1>
             </header>
 
-            {!quizData && !loading && (
+            {!loading ? (
                 <>
                     <div
                         className={`${styles.uploadCard} ${dragActive ? styles.uploadCardActive : ''}`}
@@ -119,50 +139,48 @@ export default function UploadPage() {
                             ref={inputRef}
                             type="file"
                             className={styles.fileInput}
-                            accept=".pdf"
+                            accept=".pdf,.csv,.xlsx,.xls,image/*"
                             onChange={handleChange}
                         />
-                        <div className={styles.icon}>📄</div>
+                        <div className={styles.icon}>📂</div>
                         <div className={styles.uploadText}>
-                            クリックまたはドラッグ＆ドロップで<br />PDFをアップロード
+                            クリックまたはドラッグでファイルをアップロード
                         </div>
-                        <p className={styles.uploadSubText}>行政書士試験の過去問や資料 (PDF形式)</p>
+                        <p className={styles.uploadSubText}>
+                            対応: PDF, Excel, CSV, 画像 (jpg/png)
+                        </p>
                         <div className={styles.selectButton}>ファイルを選択</div>
-                        {file && <div className={styles.fileName}>{file.name}</div>}
                     </div>
 
                     {error && (
                         <div className={styles.errorContainer}>
-                            <p>{error}</p>
+                            <p>⚠️ {error}</p>
+                        </div>
+                    )}
+
+                    {successMessage && (
+                        <div className="alert alert-success mt-4">
+                            <p>✅ {successMessage}</p>
+                            <Link href="/" className="btn btn-sm btn-ghost mt-2">
+                                ホームに戻る
+                            </Link>
                         </div>
                     )}
                 </>
-            )}
-
-            {loading && (
+            ) : (
                 <div className={styles.loadingContainer}>
                     <div className={styles.spinner}></div>
-                    <p>PDFを解析し、問題を作成しています...<br />（数秒～数十秒かかる場合があります）</p>
+                    <p>ファイルを解析し、データベースに登録しています...</p>
                 </div>
             )}
 
-            {quizData && (
-                <QuizView
-                    key={quizKey}
-                    quizData={quizData}
-                    onNext={() => processFile(file)} // 同じファイルで別の問題を作るために再送信
-                    loadingNext={loading}
-                    categoryLabel="PDF解析問題"
-                />
-            )}
-
-            {quizData && (
-                <div style={{ marginTop: '20px' }}>
-                    <button onClick={handleRetry} className="btn btn-outline">
-                        別のファイルをアップロード
-                    </button>
-                </div>
-            )}
+            <div style={{ marginTop: '2rem', fontSize: '0.9rem', color: '#666' }}>
+                <h3>💡 アップロードのヒント</h3>
+                <ul>
+                    <li>Excel/CSV形式の場合: A列=問題, B列=◯or☓, C列=解説</li>
+                    <li>画像の場合: 文字が読み取れる明るい写真を使用してください</li>
+                </ul>
+            </div>
         </div>
     );
 }

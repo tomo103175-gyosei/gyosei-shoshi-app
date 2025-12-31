@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import styles from './page.module.css';
+import HomeStats from './components/HomeStats';
 
 export default function Home() {
   return (
@@ -11,6 +12,9 @@ export default function Home() {
           質の高い問題演習と詳細な解説で、<br />合格への最短ルートを。
         </p>
       </div>
+
+      {/* 復習セクションを追加 */}
+      <HomeStats />
 
       <div className={styles.grid}>
         <div className="card">
@@ -34,7 +38,7 @@ export default function Home() {
               <div className={styles.cardIcon}>📄</div>
               <h2 className={styles.cardTitle}>過去問アップロード</h2>
               <p className={styles.cardDesc}>
-                手持ちの過去問PDFを読み込み、<br />AI解説付きで問題を解く。
+                PDF・Excel・画像を取り込み、<br />自動で復習リストに追加。
               </p>
             </div>
             <Link href="/upload" className="btn btn-accent w-full">

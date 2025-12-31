@@ -1,3 +1,4 @@
+
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GoogleAIFileManager } from "@google/generative-ai/server";
 import { NextResponse } from "next/server";
@@ -27,7 +28,9 @@ export async function POST(request) {
         // 一時ファイルとして保存
         const buffer = Buffer.from(await file.arrayBuffer());
         const tempDir = tmpdir();
-        const fileName = `upload-${Date.now()}.pdf`;
+        // 拡張子を取得 (簡易的)
+        const ext = file.name.split('.').pop() || 'jpg';
+        const fileName = `upload-img-${Date.now()}.${ext}`;
         tempFilePath = join(tempDir, fileName);
 
         await writeFile(tempFilePath, buffer);
@@ -35,36 +38,34 @@ export async function POST(request) {
         // Geminiにアップロード
         const fileManager = new GoogleAIFileManager(apiKey);
         const uploadResult = await fileManager.uploadFile(tempFilePath, {
-            mimeType: "application/pdf",
+            mimeType: file.type || "image/jpeg",
             displayName: file.name,
         });
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        // ★修正点1: 確実に動くモデル名に変更
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
         const prompt = `
       あなたは行政書士試験の専門家です。
-      提供されたPDFファイル（過去問や学習資料）の内容に基づいて、行政書士試験レベルの問題（◯☓問題または5肢択一問題）を作成してください。
-      
+      提供された画像（問題集の写真や手書きメモなど）から問題を読み取り、以下のJSON形式で出力してください。
+      画像に複数の問題が含まれる場合は、最初に見つかった1問、または最も主要な1問を抽出してください。
+
       ## 指示
-       1. **出題範囲**: 提供されたPDFの内容に関連する問題を作成すること。
-       2. **形式**: 問題形式に応じて、正解を以下のいずれかとする。
+       1. 画像から問題文、正解、解説を読み取るか、解説がなければ知識に基づいて補足すること。
+       2. 問題形式に応じて、正解を以下のいずれかで出力すること:
           - ◯☓問題の場合: "O" または "X"
           - 5肢択一などの多肢選択問題の場合: 正解の番号 ("1"〜"5" の半角数字)
-       3. **解説**: テキストの内容を引用・参照しつつ、正確な法的根拠（条文・判例）を示して解説すること。
-       4. **出力**: 以下のJSON形式のみを出力すること。
+       3. 解説は法的根拠を含めて詳細に記述すること。
+       4. 出力はJSONのみ。
 
        ## JSONスキーマ
        {
          "text": "問題文",
          "correctAnswer": "O", // または "X", "1", "2", "3", "4", "5"
-         "explanation": "解説文",
-         "reference": "根拠条文・情報源"
+         "explanation": "解説文"
        }
     `;
 
-        // ★修正点2: JSONモードを強制する書き方に変更
         const result = await model.generateContent({
             contents: [{
                 role: "user",
@@ -92,9 +93,10 @@ export async function POST(request) {
 
         try {
             const quizData = JSON.parse(responseText);
-            return NextResponse.json(quizData);
+            // 配列で返すことを期待される場合も考慮し、単一オブジェクトなら配列に入れる
+            return NextResponse.json([quizData]);
         } catch (e) {
-            console.error("JSON Parse Error:", responseText); // エラー時にログを出す
+            console.error("JSON Parse Error:", responseText);
             return NextResponse.json(
                 { error: "AIからの応答の解析に失敗しました" },
                 { status: 500 }
@@ -102,7 +104,7 @@ export async function POST(request) {
         }
 
     } catch (error) {
-        console.error("PDF processing error:", error);
+        console.error("Image processing error:", error);
         if (tempFilePath) {
             await unlink(tempFilePath).catch(e => console.error("Temp file cleanup error:", e));
         }
